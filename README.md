@@ -124,6 +124,7 @@ Counter({re.compile('\\s'): 4529, re.compile('\\w'): 3564})
 
 
 ## TODO:
+- Set words in stone w/ descriptions
 - Add remaining functions from `re`
 - Add additional sytnaxes supported by Python
 - Reevaluate how match v. non-matching groups are captured
