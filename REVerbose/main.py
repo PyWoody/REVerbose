@@ -107,7 +107,7 @@ class Regex(BaseAdder):
         return isinstance(other, Regex) and str(self) == str(other)
 
     def __hash__(self):
-        return hash(str(self))
+        return hash(repr(self))
 
     @property
     def compiled(self):
