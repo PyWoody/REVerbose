@@ -1,12 +1,12 @@
 # REVerbose
 ## Regex for the Lazy
 
-REVerbose was created to make creating complicated Regular Expressions easier to generate without having to memorize specialized syntaxes. With REVerbose, all you need to do is build up a series of pre-defined words and the Regular Expression is genenerated automatically. The `Regex.compiled` property will return your compiled Regular Expression that can be used for the standard `.search', '.match`, `.fullmatch`, `.sub`, `.subn`, `.split`, `.findall`, and `.finditer` functions.
+REVerbose was created to make creating complicated Regular Expressions easier to generate without having to memorize specialized syntaxes. With REVerbose, all you need to do is build up a series of pre-defined words and the Regular Expression is genenerated automatically. The `Regex.compiled` property will return your compiled Regular Expression that can be used for the standard `.search`, `.match`, `.fullmatch`, `.sub`, `.subn`, `.split`, `.findall`, and `.finditer` functions.
 
 
 ### Basic example
 
-```
+```python3
 import re
 import REVerbose as rev
 
@@ -21,7 +21,7 @@ import REVerbose as rev
 
 Compiling a regular expression in steps:
 
-```
+```python3
 >>> regex = rev.LINE_START
 >>> regex += rev.ANYTHING
 >>> regex += rev.ANY_WORD_GROUPS(['something', 'wicked'])
@@ -41,7 +41,7 @@ Compiling a regular expression in steps:
 
 Since the compiled Regular Expression objects are hashable, they can be used in tuples and as dictionary keys.
 
-'''
+```python3
 >>> results = collections.defaultdict(list)
 >>> contains_cat_or_dog = rev.WHITESPACE
 >>> contains_cat_or_dog += rev.ZERO_OR_ONE
@@ -109,7 +109,7 @@ Since the compiled Regular Expression objects are hashable, they can be used in 
 
 You could easily take advantage of this for use in Counters:
 
-```
+```python3
 >>> counter = collections.Counter()
 >>> regexes = [rev.compile(rev.ANY_WORD), rev.compile(rev.WHITESPACE)]
 >>> with open(r'data/macbeth_1533-0.txt', 'r', encoding='utf8') as f:
