@@ -677,6 +677,7 @@ def compile(regex, flags=0):
 
 ALL_OR_NONE = Asterik()
 ANY = Dot()
+ANYTHING = Dot() + Asterik()
 ANY_DIGIT = AnyDigit()
 ANY_NON_DIGIT = AnyNonDigit()
 ANY_NON_WORD = AnyNonAlphanumericWord()
@@ -709,6 +710,7 @@ __all__ = (
     compile,
     ALL_OR_NONE,
     ANY,
+    ANYTHING,
     ANY_DIGIT,
     ANY_NON_DIGIT,
     ANY_NON_WORD,

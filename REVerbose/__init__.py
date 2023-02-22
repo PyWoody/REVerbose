@@ -2,6 +2,7 @@ from .main import (
     compile,
     ALL_OR_NONE,
     ANY,
+    ANYTHING,
     ANY_DIGIT,
     ANY_NON_DIGIT,
     ANY_NON_WORD,
