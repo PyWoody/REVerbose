@@ -2,13 +2,6 @@ import re
 
 from collections import abc
 
-
-# TODO: Make sure all items that can accept inputs do
-#       i.e., End should accept something so you can do ...$
-
-# TODO: Find a way to normalize names so all iterable classes are obvious
-#       Maybe 'ALL' and 'ANY' will work
-
 # NOTE: Since Regex is hashable, it can be used as a key in a dict
 #       results = defaultdict(list)
 #       regexes = [Regex(...), ..., N]
@@ -54,7 +47,7 @@ class BaseAdder:
                     args.append(str(repr(arg)))
             args = f"[{', '.join(args)}]"
         elif items := self.__dict__.items():
-            args = ', '.join([f'{k}="{v}"' for k, v in items])
+            args = ', '.join([f'{k}=r"{v}"' for k, v in items])
         else:
             args = ''
         return rf'{self.__class__.__name__}({args})'
@@ -112,15 +105,71 @@ class Regex(BaseAdder):
     @property
     def compiled(self):
         if self.__compiled is None:
-            self.__compiled = re.compile(str(self), self.flags)
+            try:
+                self.__compiled = re.compile(str(self), self.flags)
+            except re.error as e:
+                if m := re.search(r' position (\d+)', str(e)):
+                    print(
+                        f'Bad Regex char: {str(self)[int(m.group(1))]}'
+                    )
+                raise e
         return self.__compiled
 
-    # NOTE: Tmp placeholders for demonstration
-    def search(self, line):
-        return self.compiled.search(line)
+    def search(self, string, flags=0):
+        """See help(re.search) for help."""
+        if flags != self.flags:
+            self.flags = flags
+            self.__compiled = None
+        return self.compiled.search(string)
 
-    def match(self, line):
-        return self.compiled.match(line)
+    def match(self, string, flags=0):
+        """See help(re.match) for help."""
+        if flags != self.flags:
+            self.flags = flags
+            self.__compiled = None
+        return self.compiled.match(string)
+
+    def fullmatch(self, string, flags=0):
+        """See help(re.fullmatch) for help."""
+        if flags != self.flags:
+            self.flags = flags
+            self.__compiled = None
+        return self.compiled.fullmatch(string)
+
+    def sub(self, repl, string, count=0, flags=0):
+        """See help(re.sub) for help."""
+        if flags != self.flags:
+            self.flags = flags
+            self.__compiled = None
+        return self.compiled.sub(repl, string, count)
+
+    def subn(self, repl, string, count=0, flags=0):
+        """See help(re.subn) for help."""
+        if flags != self.flags:
+            self.flags = flags
+            self.__compiled = None
+        return self.compiled.subn(repl, string, count)
+
+    def split(self, string, maxsplit=0, flags=0):
+        """See help(re.split) for help."""
+        if flags != self.flags:
+            self.flags = flags
+            self.__compiled = None
+        return self.compiled.split(string, maxsplit)
+
+    def findall(self, string, flags=0):
+        """See help(re.findall) for help."""
+        if flags != self.flags:
+            self.flags = flags
+            self.__compiled = None
+        return self.compiled.findall(string)
+
+    def finditer(self, string, flags=0):
+        """See help(re.finditer) for help."""
+        if flags != self.flags:
+            self.flags = flags
+            self.__compiled = None
+        return self.compiled.finditer(string)
 
 
 class AnyAlphanumericWord(BaseAdder):
@@ -222,6 +271,8 @@ class Asterik(BaseAdder):
     """
 
     def __init__(self, chars=''):
+        if not isinstance(chars, str):
+            raise TypeError(f'Expected string but received {type(chars)}')
         self.chars = str(chars)
 
     @classmethod
@@ -240,6 +291,8 @@ class BackReference(BaseAdder):
     """
 
     def __init__(self, ref):
+        if not isinstance(ref, str):
+            raise TypeError(f'Expected string but received {type(ref)}')
         self.ref = str(ref)
 
     @classmethod
@@ -258,6 +311,8 @@ class Caret(BaseAdder):
     """
 
     def __init__(self, chars=''):
+        if not isinstance(chars, str):
+            raise TypeError(f'Expected string but received {type(chars)}')
         self.chars = str(chars)
 
     @classmethod
@@ -275,6 +330,8 @@ class Comment(BaseAdder):
     """
 
     def __init__(self, comment):
+        if not isinstance(comment, str):
+            raise TypeError(f'Expected string but received {type(comment)}')
         self.comment = str(comment)
 
     @classmethod
@@ -310,6 +367,8 @@ class End(BaseAdder):
     """
 
     def __init__(self, word=''):
+        if not isinstance(word, str):
+            raise TypeError(f'Expected string but received {type(word)}')
         self.word = str(word)
 
     @classmethod
@@ -317,7 +376,7 @@ class End(BaseAdder):
         return cls(word)
 
     def __str__(self):
-        return r'{self.word}$'
+        return fr'{self.word}$'
 
 
 class Escape(BaseAdder):
@@ -331,6 +390,8 @@ class Escape(BaseAdder):
     """
 
     def __init__(self, char=''):
+        if not isinstance(char, str):
+            raise TypeError(f'Expected string but received {type(char)}')
         self.char = str(char).lstrip(r'\\')
 
     @classmethod
@@ -353,6 +414,8 @@ class Group(BaseAdder):
     """
 
     def __init__(self, group):
+        if not isinstance(group, str):
+            raise TypeError(f'Expected string but received {type(group)}')
         self.group = str(group)
 
     @classmethod
@@ -361,6 +424,31 @@ class Group(BaseAdder):
 
     def __str__(self):
         return rf'({self.group})'
+
+
+class Groups(BaseAdder):
+    """Matches whatever regular expression is inside the parentheses,
+    and indicates the start and end of a group; the contents of a group
+    can be retrieved after a match has been performed, and can be matched
+    later in the string with the \number special sequence, described below.
+    To match the literals '(' or ')', use \( or \), or enclose them inside
+    a character class: [(], [)]
+        
+    Documentation Source: https://docs.python.org/3/library/re.html
+    """
+
+    def __init__(self, groups):
+        self.groups = list(groups)
+
+    @classmethod
+    def __call__(cls, groups):
+        return cls(groups)
+
+    def __iter__(self):
+        yield from self.groups
+
+    def __str__(self):
+        return r''.join([str(g) for g in self.groups])
 
 
 class List(BaseAdder):
@@ -394,6 +482,8 @@ class LookAheadAssertion(BaseAdder):
     """
 
     def __init__(self, assertion):
+        if not isinstance(assertion, str):
+            raise TypeError(f'Expected string but received {type(assertion)}')
         self.assertion = str(assertion)
 
     @classmethod
@@ -462,6 +552,29 @@ class NonMatchingGroup(BaseAdder):
 
     def __str__(self):
         return rf'(?:{self.group})'
+
+
+class NonMatchingGroups(BaseAdder):
+    """A non-capturing version of regular parentheses. Matches whatever
+    regular expression is inside the parentheses, but the substring
+    matched by the group cannot be retrieved after performing a match
+    or referenced later in the pattern
+
+    Documentation Source: https://docs.python.org/3/library/re.html
+    """
+
+    def __init__(self, groups):
+        self.groups = list(groups)
+
+    @classmethod
+    def __call__(cls, groups):
+        return cls(groups)
+
+    def __iter__(self):
+        yield from self.groups
+
+    def __str__(self):
+        return rf"(?:{''.join([str(g) for g in self.groups])})"
 
 
 class Period(BaseAdder):
@@ -558,7 +671,6 @@ class ZeroOrOne(BaseAdder):
         return rf'{self.chars}?'
 
 
-
 def compile(regex, flags=0):
     return re.compile(str(regex), flags=flags)
 
@@ -569,11 +681,10 @@ ANY_DIGIT = AnyDigit()
 ANY_NON_DIGIT = AnyNonDigit()
 ANY_NON_WORD = AnyNonAlphanumericWord()
 ANY_WORD = AnyAlphanumericWord()
-ANY_WORD_GROUP = AnyWordGroup
+ANY_WORD_GROUPS = AnyWordGroup
 BACK_REFERENCE = BackReference
 COMMENT = Comment
 ESCAPE = Escape()
-GROUP = Group
 LINE_END = End()
 LINE_START = Caret()
 LIST = List
@@ -582,13 +693,16 @@ NAMED_GROUP = NamedGroup
 NEGATIVE_LOOK_AHEAD = NegativeLookAhead
 NON_WHITESPACE = AnyNonWhitespaceCharacter()
 NON_MATCHING_GROUP = NonMatchingGroup
-ONE_OR_MORE = Plus
+NON_MATCHING_GROUPS = NonMatchingGroups
+ONE_OR_MORE = Plus()
 PERIOD = Period()
 POSITIVE_LOOK_BEHIND = PositiveLookBehindAssertion
 STRING_STARTS_WITH = StringStartsWith
 QUESTION_MARK = QuestionMark()
 WHITESPACE = AnyWhitespaceCharacter()
-ZERO_OR_ONE = ZeroOrOne
+WORD_GROUP = Group
+WORD_GROUPS = Groups
+ZERO_OR_ONE = ZeroOrOne()
 
 
 __all__ = (
@@ -599,11 +713,10 @@ __all__ = (
     ANY_NON_DIGIT,
     ANY_NON_WORD,
     ANY_WORD,
-    ANY_WORD_GROUP,
+    ANY_WORD_GROUPS,
     BACK_REFERENCE,
     COMMENT,
     ESCAPE,
-    GROUP,
     LINE_END,
     LINE_START,
     LIST,
@@ -612,39 +725,46 @@ __all__ = (
     NEGATIVE_LOOK_AHEAD,
     NON_WHITESPACE,
     NON_MATCHING_GROUP,
+    NON_MATCHING_GROUPS,
     ONE_OR_MORE,
     PERIOD,
     POSITIVE_LOOK_BEHIND,
     STRING_STARTS_WITH,
     QUESTION_MARK,
     WHITESPACE,
+    WORD_GROUP,
+    WORD_GROUPS,
     ZERO_OR_ONE,
 )
 
 
 if __name__ == '__main__':
-    ANY = Dot()
-    ANY_WORD = AnyWordGroup()
-    LINE_START = Caret()
-    LINE_END = End()
-    ALL_OR_NONE = Asterik()
-    ONE_OR_MORE = Plus()
-    ZERO_OR_ONE = QuestionMark()
-    GROUP = Group()
     output = LINE_START
-    output += ANY
-    output += ANY_WORD(['fart', 'tacos'])
-    output += GROUP(['test', ANY, 'fart', ONE_OR_MORE])
-    output += GROUP([r'C:\test\file\name'])
+    print(output)
+    output += ANY_WORD_GROUPS(['ham', 'spam', 'tacos'])
+    print(output)
+    output += ANY_WORD_GROUPS(['test', ANY, 'fart'])
+    print(output)
+    output += NON_MATCHING_GROUPS(['test', ANY, 'fart', LIST('a-z')])
+    print(output)
+    output += WORD_GROUP('test')
+    try:
+        output += WORD_GROUP(['test'])
+    except TypeError:
+        pass
+    print(output)
+    output += WORD_GROUPS(['test', ANY, 'fart', ONE_OR_MORE])
+    print(output)
+    output += WORD_GROUP(r'C:\test\file\name')
+    print(output)
     output += LINE_END
     print(output)
     print(type(output))
-    print(str(output))
-    print(repr(output))
-    print(output())
+    print('STRING:', str(output))
+    print('REPR:', repr(output))
 
     print(hash(eval(repr(output))), hash(output))
     print(hash(eval(repr(output))) == hash(output))
     print(eval(repr(output)) == output)
     print(str(eval(repr(output))) == str(output))
-    print(eval(repr(output))())
+    print(eval(repr(output)))
