@@ -9,6 +9,27 @@ from collections import abc
 # TODO: Find a way to normalize names so all iterable classes are obvious
 #       Maybe 'ALL' and 'ANY' will work
 
+# NOTE: Since Regex is hashable, it can be used as a key in a dict
+#       results = defaultdict(list)
+#       regexes = [Regex(...), ..., N]
+#       with open(some_file) as f:
+#           for line in file:
+#               for regex in regexes:
+#                   if match := regex.search(line):
+#                       results[regex].append(match.group())
+#       print(results[regexes[0])
+#
+#
+#       Would also be good for counters
+#       results = Counter()  # maybe double-check
+#       regexes = [Regex(...), ..., N]
+#       with open(some_file) as f:
+#           for line in file:
+#               for regex in regexes:
+#                   if regex.search(line):
+#                       results[regex] += 1
+#       print(results.max()) # or whatever
+
 
 class BaseAdder:
 
@@ -58,8 +79,10 @@ class BaseAdder:
 
 class Regex(BaseAdder):
 
-    def __init__(self, *parts):
+    def __init__(self, *parts, flags=0):
         self.parts = list(parts)
+        self.flags = flags
+        self.__compiled = None
 
     def __repr__(self):
         words = ', '.join([repr(p) for p in self.parts])
@@ -86,8 +109,18 @@ class Regex(BaseAdder):
     def __hash__(self):
         return hash(str(self))
 
-    def __call__(self, flags=0):
-        return re.compile(str(self), flags)
+    @property
+    def compiled(self):
+        if self.__compiled is None:
+            self.__compiled = re.compile(str(self), self.flags)
+        return self.__compiled
+
+    # NOTE: Tmp placeholders for demonstration
+    def search(self, line):
+        return self.compiled.search(line)
+
+    def match(self, line):
+        return self.compiled.match(line)
 
 
 class AnyAlphanumericWord(BaseAdder):
@@ -188,8 +221,15 @@ class Asterik(BaseAdder):
     Documentation Source: https://docs.python.org/3/library/re.html
     """
 
+    def __init__(self, chars=''):
+        self.chars = str(chars)
+
+    @classmethod
+    def __call__(cls, chars=''):
+        return cls(chars)
+
     def __str__(self):
-        return r'*'
+        return rf'{self.chars}*'
 
 
 class BackReference(BaseAdder):
@@ -217,8 +257,15 @@ class Caret(BaseAdder):
     Documentation Source: https://docs.python.org/3/library/re.html
     """
 
+    def __init__(self, chars=''):
+        self.chars = str(chars)
+
+    @classmethod
+    def __call__(cls, chars=''):
+        return cls(chars)
+
     def __str__(self):
-        return r'^'
+        return rf'^{self.chars}'
 
 
 class Comment(BaseAdder):
@@ -262,11 +309,11 @@ class End(BaseAdder):
     Documentation Source: https://docs.python.org/3/library/re.html
     """
 
-    def __init__(self, word=None):
-        self.word = str(word) if word is not None else ''
+    def __init__(self, word=''):
+        self.word = str(word)
 
     @classmethod
-    def __call__(self, word=None):
+    def __call__(cls, word=''):
         return cls(word)
 
     def __str__(self):
@@ -283,12 +330,12 @@ class Escape(BaseAdder):
     Documentation Source: https://docs.python.org/3/library/re.html
     """
 
-    def __init__(self, char=None):
-        self.char = str(char).lstrip(r'\\') if char is not None else r'\\'
+    def __init__(self, char=''):
+        self.char = str(char).lstrip(r'\\')
 
     @classmethod
-    def __call__(cls, char=None):
-        return cls(char=char)
+    def __call__(cls, char=''):
+        return cls(char)
 
     def __str__(self):
         return rf'\{self.char}'
@@ -417,6 +464,13 @@ class NonMatchingGroup(BaseAdder):
         return rf'(?:{self.group})'
 
 
+class Period(BaseAdder):
+    """An escpaed, r'\.', period"""
+
+    def __str__(self):
+        return r'\.'
+
+
 class Plus(BaseAdder):
     """Causes the resulting RE to match 1 or more repetitions of the
     preceding RE. ab+ will match ‘a’ followed by any non-zero number
@@ -425,8 +479,15 @@ class Plus(BaseAdder):
     Documentation Source: https://docs.python.org/3/library/re.html
     """
 
+    def __init__(self, chars=''):
+        self.chars = str(chars)
+
+    @classmethod
+    def __call__(cls, chars=''):
+        return cls(chars)
+
     def __str__(self):
-        return r'+'
+        return rf'{self.chars}+'
 
 
 class PositiveLookBehindAssertion(BaseAdder):
@@ -456,11 +517,7 @@ class PositiveLookBehindAssertion(BaseAdder):
 
 
 class QuestionMark(BaseAdder):
-    """Causes the resulting RE to match 0 or 1 repetitions of the preceding RE.
-    ab? will match either ‘a’ or ‘ab’.
-        
-    Documentation Source: https://docs.python.org/3/library/re.html
-    """
+    """An escpaed, r'\?', question mark"""
 
     def __str__(self):
         return r'\?'
@@ -476,11 +533,30 @@ class StringStartsWith(BaseAdder):
         self.word = str(word)
 
     @classmethod
-    def __call__(self, word):
+    def __call__(cls, word):
         return cls(word)
 
     def __str__(self):
         return rf'\A{self.word}'
+
+
+class ZeroOrOne(BaseAdder):
+    """Causes the resulting RE to match 0 or 1 repetitions of the preceding RE.
+    ab? will match either ‘a’ or ‘ab’.
+        
+    Documentation Source: https://docs.python.org/3/library/re.html
+    """
+
+    def __init__(self, chars=''):
+        self.chars = str(chars)
+
+    @classmethod
+    def __call__(cls, chars=''):
+        return cls(chars)
+
+    def __str__(self):
+        return rf'{self.chars}?'
+
 
 
 def compile(regex, flags=0):
@@ -506,30 +582,43 @@ NAMED_GROUP = NamedGroup
 NEGATIVE_LOOK_AHEAD = NegativeLookAhead
 NON_WHITESPACE = AnyNonWhitespaceCharacter()
 NON_MATCHING_GROUP = NonMatchingGroup
+ONE_OR_MORE = Plus
+PERIOD = Period()
 POSITIVE_LOOK_BEHIND = PositiveLookBehindAssertion
-ONE_OR_MORE = Plus()
 STRING_STARTS_WITH = StringStartsWith
+QUESTION_MARK = QuestionMark()
 WHITESPACE = AnyWhitespaceCharacter()
-ZERO_OR_ONE = QuestionMark()
+ZERO_OR_ONE = ZeroOrOne
 
 
 __all__ = (
     compile,
+    ALL_OR_NONE,
     ANY,
     ANY_DIGIT,
     ANY_NON_DIGIT,
-    ANY_WORD,
     ANY_NON_WORD,
+    ANY_WORD,
     ANY_WORD_GROUP,
-    WHITESPACE,
-    NON_WHITESPACE,
-    LINE_START,
-    LINE_END,
-    ALL_OR_NONE,
-    ONE_OR_MORE,
-    ZERO_OR_ONE,
+    BACK_REFERENCE,
+    COMMENT,
+    ESCAPE,
     GROUP,
-    NAMED_GROUP
+    LINE_END,
+    LINE_START,
+    LIST,
+    LOOK_AHEAD,
+    NAMED_GROUP,
+    NEGATIVE_LOOK_AHEAD,
+    NON_WHITESPACE,
+    NON_MATCHING_GROUP,
+    ONE_OR_MORE,
+    PERIOD,
+    POSITIVE_LOOK_BEHIND,
+    STRING_STARTS_WITH,
+    QUESTION_MARK,
+    WHITESPACE,
+    ZERO_OR_ONE,
 )
 
 
