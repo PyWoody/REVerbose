@@ -123,6 +123,7 @@ You could easily take advantage of this for use in Counters:
 ... 
 >>> counter
 Counter({Regex(ZeroOrOne(chars=r"\s"), Asterik(chars=r"\w"), ZeroOrOne(chars=r"\s")): 37198, Regex(AnyWhitespaceCharacter()): 22654})```
+```
 
 
 ## TODO:
