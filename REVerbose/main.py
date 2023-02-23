@@ -672,7 +672,7 @@ class ZeroOrOne(BaseAdder):
 
 
 def compile(regex, flags=0):
-    return re.compile(str(regex), flags=flags)
+    return Regex(regex, flags=flags)
 
 
 ALL_OR_NONE = Asterik()

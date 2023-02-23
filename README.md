@@ -115,11 +115,11 @@ You could easily take advantage of this for use in Counters:
 >>> with open(r'data/macbeth_1533-0.txt', 'r', encoding='utf8') as f:
 ...  for line in f:
 ...   for regex in regexes:
-...    if regex.search(line):
+...    for _ in regex.finditer(line):
 ...     counter[regex] += 1
 ...
 >>> counter
-Counter({re.compile('\\s'): 4529, re.compile('\\w'): 3564})
+Counter({Regex(AnyAlphanumericWord()): 94846, Regex(AnyWhitespaceCharacter()): 22654})
 ```
 
 
