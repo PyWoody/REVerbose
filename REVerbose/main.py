@@ -2,27 +2,6 @@ import re
 
 from collections import abc
 
-# NOTE: Since Regex is hashable, it can be used as a key in a dict
-#       results = defaultdict(list)
-#       regexes = [Regex(...), ..., N]
-#       with open(some_file) as f:
-#           for line in file:
-#               for regex in regexes:
-#                   if match := regex.search(line):
-#                       results[regex].append(match.group())
-#       print(results[regexes[0])
-#
-#
-#       Would also be good for counters
-#       results = Counter()  # maybe double-check
-#       regexes = [Regex(...), ..., N]
-#       with open(some_file) as f:
-#           for line in file:
-#               for regex in regexes:
-#                   if regex.search(line):
-#                       results[regex] += 1
-#       print(results.max()) # or whatever
-
 
 class BaseAdder:
 
@@ -271,8 +250,10 @@ class Asterik(BaseAdder):
     """
 
     def __init__(self, chars=''):
-        if not isinstance(chars, str):
-            raise TypeError(f'Expected string but received {type(chars)}')
+        if not regex_type_checker(chars, self):
+            raise TypeError(
+                f'Expected string or Regex object but received {type(chars)}'
+            )
         self.chars = str(chars)
 
     @classmethod
@@ -291,8 +272,10 @@ class BackReference(BaseAdder):
     """
 
     def __init__(self, ref):
-        if not isinstance(ref, str):
-            raise TypeError(f'Expected string but received {type(ref)}')
+        if not regex_type_checker(ref, self):
+            raise TypeError(
+                f'Expected string or Regex object but received {type(chars)}'
+            )
         self.ref = str(ref)
 
     @classmethod
@@ -311,8 +294,10 @@ class Caret(BaseAdder):
     """
 
     def __init__(self, chars=''):
-        if not isinstance(chars, str):
-            raise TypeError(f'Expected string but received {type(chars)}')
+        if not regex_type_checker(chars, self):
+            raise TypeError(
+                f'Expected string or Regex object but received {type(chars)}'
+            )
         self.chars = str(chars)
 
     @classmethod
@@ -330,8 +315,10 @@ class Comment(BaseAdder):
     """
 
     def __init__(self, comment):
-        if not isinstance(comment, str):
-            raise TypeError(f'Expected string but received {type(comment)}')
+        if not regex_type_checker(comment, self):
+            raise TypeError(
+                f'Expected string or Regex object but received {type(chars)}'
+            )
         self.comment = str(comment)
 
     @classmethod
@@ -367,8 +354,10 @@ class End(BaseAdder):
     """
 
     def __init__(self, word=''):
-        if not isinstance(word, str):
-            raise TypeError(f'Expected string but received {type(word)}')
+        if not regex_type_checker(word, self):
+            raise TypeError(
+                f'Expected string or Regex object but received {type(chars)}'
+            )
         self.word = str(word)
 
     @classmethod
@@ -390,8 +379,10 @@ class Escape(BaseAdder):
     """
 
     def __init__(self, char=''):
-        if not isinstance(char, str):
-            raise TypeError(f'Expected string but received {type(char)}')
+        if not regex_type_checker(char, self):
+            raise TypeError(
+                f'Expected string or Regex object but received {type(chars)}'
+            )
         self.char = str(char).lstrip(r'\\')
 
     @classmethod
@@ -414,8 +405,10 @@ class Group(BaseAdder):
     """
 
     def __init__(self, group):
-        if not isinstance(group, str):
-            raise TypeError(f'Expected string but received {type(group)}')
+        if not regex_type_checker(group, self):
+            raise TypeError(
+                f'Expected string or Regex object but received {type(chars)}'
+            )
         self.group = str(group)
 
     @classmethod
@@ -482,8 +475,10 @@ class LookAheadAssertion(BaseAdder):
     """
 
     def __init__(self, assertion):
-        if not isinstance(assertion, str):
-            raise TypeError(f'Expected string but received {type(assertion)}')
+        if not regex_type_checker(assertion, self):
+            raise TypeError(
+                f'Expected string or Regex object but received {type(chars)}'
+            )
         self.assertion = str(assertion)
 
     @classmethod
@@ -670,6 +665,11 @@ class ZeroOrOne(BaseAdder):
     def __str__(self):
         return rf'{self.chars}?'
 
+
+def regex_type_checker(string, _class):
+    if not isinstance(string, str) and not issubclass(type(_class), BaseAdder):
+        return False
+    return True
 
 def compile(regex, flags=0):
     return Regex(regex, flags=flags)

@@ -111,16 +111,18 @@ You could easily take advantage of this for use in Counters:
 
 ```python3
 >>> counter = collections.Counter()
->>> regexes = [rev.compile(rev.ANY_WORD), rev.compile(rev.WHITESPACE)]
->>> with open(r'data/macbeth_1533-0.txt', 'r', encoding='utf8') as f:
+>>> words = rev.ZERO_OR_ONE(rev.WHITESPACE)
+>>> words += rev.ALL_OR_NONE(rev.ANY_WORD)
+>>> words += rev.ZERO_OR_ONE(rev.WHITESPACE)
+>>> regexes = [words, rev.compile(rev.WHITESPACE)]
+>>> with open(r'data/macbeth_1533-0.txt', 'r', encoding='utf8') as f: 
 ...  for line in f:
 ...   for regex in regexes:
-...    for _ in regex.finditer(line):
-...     counter[regex] += 1
-...
+...    for match in regex.finditer(line):
+...     if match: counter[regex] += 1
+... 
 >>> counter
-Counter({Regex(AnyAlphanumericWord()): 94846, Regex(AnyWhitespaceCharacter()): 22654})
-```
+Counter({Regex(ZeroOrOne(chars=r"\s"), Asterik(chars=r"\w"), ZeroOrOne(chars=r"\s")): 37198, Regex(AnyWhitespaceCharacter()): 22654})```
 
 
 ## TODO:
