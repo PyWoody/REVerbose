@@ -26,7 +26,7 @@ class BaseAdder:
                     args.append(str(repr(arg)))
             args = f"[{', '.join(args)}]"
         elif items := self.__dict__.items():
-            args = ', '.join([f'{k}=r"{v}"' for k, v in items])
+            args = ', '.join((f'{k}=r"{v}"' for k, v in items))
         else:
             args = ''
         return rf'{self.__class__.__name__}({args})'
@@ -57,11 +57,11 @@ class Regex(BaseAdder):
         self.__compiled = None
 
     def __repr__(self):
-        words = ', '.join([repr(p) for p in self.parts])
+        words = ', '.join((repr(p) for p in self.parts))
         return rf'{self.__class__.__name__}({words})'
 
     def __str__(self):
-        return r''.join([str(p) for p in self.parts])
+        return r''.join((str(p) for p in self.parts))
 
     def __getitem__(self, index):
         return str(self)[index]
@@ -238,7 +238,7 @@ class AnyWordGroup(BaseAdder):
         yield from self.groups
 
     def __str__(self):
-        return r'|'.join([str(g) for g in self.groups])
+        return r'|'.join((str(g) for g in self.groups))
 
 
 class Asterik(BaseAdder):
@@ -441,7 +441,7 @@ class Groups(BaseAdder):
         yield from self.groups
 
     def __str__(self):
-        return rf"({'|'.join([str(g) for g in self.groups])})"
+        return rf"({'|'.join((str(g) for g in self.groups))})"
 
 
 class List(BaseAdder):
@@ -461,7 +461,7 @@ class List(BaseAdder):
         yield from self.chars
 
     def __str__(self):
-        return rf'[{r"".join([str(i) for i in self.chars])}]'
+        return rf'[{r"".join((str(i) for i in self.chars))}]'
 
 
 class LookAheadAssertion(BaseAdder):
@@ -569,7 +569,7 @@ class NonMatchingGroups(BaseAdder):
         yield from self.groups
 
     def __str__(self):
-        return rf"(?:{'|'.join([str(g) for g in self.groups])})"
+        return rf"(?:{'|'.join((str(g) for g in self.groups))})"
 
 
 class Period(BaseAdder):
