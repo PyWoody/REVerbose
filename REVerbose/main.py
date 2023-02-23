@@ -441,7 +441,7 @@ class Groups(BaseAdder):
         yield from self.groups
 
     def __str__(self):
-        return r''.join([str(g) for g in self.groups])
+        return rf"({'|'.join([str(g) for g in self.groups])})"
 
 
 class List(BaseAdder):
@@ -569,7 +569,7 @@ class NonMatchingGroups(BaseAdder):
         yield from self.groups
 
     def __str__(self):
-        return rf"(?:{''.join([str(g) for g in self.groups])})"
+        return rf"(?:{'|'.join([str(g) for g in self.groups])})"
 
 
 class Period(BaseAdder):

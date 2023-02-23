@@ -43,12 +43,15 @@ Since the compiled Regular Expression objects are hashable, they can be used in 
 
 ```python3
 >>> results = collections.defaultdict(list)
->>> contains_cat_or_dog = rev.WHITESPACE
->>> contains_cat_or_dog += rev.ZERO_OR_ONE
->>> contains_cat_or_dog += rev.ANY_WORD_GROUPS(['cat', 'dog'])
->>> contains_cat_or_dog += rev.ZERO_OR_ONE(rev.WHITESPACE)
+>>> contains_cats_or_dogs = rev.ONE_OR_MORE(
+    rev.NON_MATCHING_GROUPS([rev.LINE_START, rev.WHITESPACE])
+)
+>>> contains_cats_or_dogs += rev.NON_MATCHING_GROUPS(['cat', 'dog'])
+>>> contains_cats_or_dogs += rev.NON_MATCHING_GROUPS(
+    [rev.LINE_END, rev.PERIOD, rev.WHITESPACE, 's']
+)
 >>> regexes = [
-    contains_cat_or_dog,
+    contains_cats_or_dogs,
     rev.LINE_START + rev.WORD_GROUP('Macbeth')
 ]
 >>> with open(r'data/macbeth_1533-0.txt', 'r', encoding='utf8') as f:
@@ -61,43 +64,6 @@ Since the compiled Regular Expression objects are hashable, they can be used in 
 ...  for result in values:
 ...   print(f'\t{result}')
 ...
-\s?cat|dog\s? (Regex(AnyWhitespaceCharacter(), ZeroOrOne(chars=r""), AnyWordGroup([r"cat", r"dog"]), ZeroOrOne(chars=r"\s")))
-        <re.Match object; span=(36, 39), match='cat'>
-        <re.Match object; span=(59, 62), match='cat'>
-        <re.Match object; span=(2, 6), match=' cat'>
-        <re.Match object; span=(15, 18), match='cat'>
-        <re.Match object; span=(37, 41), match=' cat'>
-        <re.Match object; span=(13, 17), match=' cat'>
-        <re.Match object; span=(7, 10), match='cat'>
-        <re.Match object; span=(47, 50), match='cat'>
-        <re.Match object; span=(36, 39), match='cat'>
-        <re.Match object; span=(6, 9), match='cat'>
-        <re.Match object; span=(61, 64), match='cat'>
-        <re.Match object; span=(35, 38), match='cat'>
-        <re.Match object; span=(10, 14), match=' cat'>
-        <re.Match object; span=(19, 22), match='dog'>
-        <re.Match object; span=(38, 41), match='cat'>
-        <re.Match object; span=(44, 47), match='cat'>
-        <re.Match object; span=(16, 19), match='cat'>
-        <re.Match object; span=(4, 8), match=' cat'>
-        <re.Match object; span=(18, 22), match=' cat'>
-        <re.Match object; span=(27, 30), match='dog'>
-        <re.Match object; span=(9, 12), match='cat'>
-        <re.Match object; span=(10, 13), match='cat'>
-        <re.Match object; span=(25, 28), match='cat'>
-        <re.Match object; span=(20, 23), match='dog'>
-        <re.Match object; span=(19, 22), match='cat'>
-        <re.Match object; span=(25, 28), match='cat'>
-        <re.Match object; span=(28, 31), match='cat'>
-        <re.Match object; span=(53, 56), match='cat'>
-        <re.Match object; span=(57, 60), match='cat'>
-        <re.Match object; span=(12, 15), match='cat'>
-        <re.Match object; span=(21, 24), match='cat'>
-        <re.Match object; span=(56, 59), match='cat'>
-        <re.Match object; span=(13, 16), match='cat'>
-        <re.Match object; span=(61, 64), match='cat'>
-        <re.Match object; span=(38, 41), match='cat'>
-        <re.Match object; span=(58, 61), match='cat'>
 ^(Macbeth) (Regex(Caret(chars=r""), Group(group=r"Macbeth")))
         <re.Match object; span=(0, 7), match='Macbeth'>
         <re.Match object; span=(0, 7), match='Macbeth'>
@@ -105,6 +71,11 @@ Since the compiled Regular Expression objects are hashable, they can be used in 
         <re.Match object; span=(0, 7), match='Macbeth'>
         <re.Match object; span=(0, 7), match='Macbeth'>
         <re.Match object; span=(0, 7), match='Macbeth'>
+(?:^|\s)+(?:cat|dog)(?:$|\.|\s|s) (Regex(Plus(chars=r"(?:^|\s)"), NonMatchingGroups([r"cat", r"dog"]), NonMatchingGroups([End(word=r""), Period(), AnyWhitespaceCharacter(), r"s"])))
+        <re.Match object; span=(13, 18), match=' cat '>
+        <re.Match object; span=(18, 23), match=' dogs'>
+        <re.Match object; span=(18, 23), match=' cat '>
+        <re.Match object; span=(19, 24), match=' dogs'>```
 ```
 
 You could easily take advantage of this for use in Counters:
