@@ -32,17 +32,15 @@ class BaseAdder:
         return rf'{self.__class__.__name__}({args})'
 
     def __add__(self, other):
-        if not isinstance(other, Regex):
-            if not issubclass(type(other), BaseAdder):
-                raise TypeError(f'Cannot concatenate Regex and {type(other)}')
+        if not issubclass(type(other), BaseAdder):
+            raise TypeError(f'Cannot concatenate Regex and {type(other)}')
         if isinstance(self, Regex):
             return Regex(*self.parts, other)
         return Regex(self, other)
 
     def __iadd__(self, other):
-        if not isinstance(other, Regex):
-            if not issubclass(type(other), BaseAdder):
-                raise TypeError(f'Cannot concatenate Regex and {type(other)}')
+        if not issubclass(type(other), BaseAdder):
+            raise TypeError(f'Cannot concatenate Regex and {type(other)}')
         if isinstance(self, Regex):
             self.parts.append(other)
             return self
@@ -274,7 +272,7 @@ class BackReference(BaseAdder):
     def __init__(self, ref):
         if not regex_type_checker(ref, self):
             raise TypeError(
-                f'Expected string or Regex object but received {type(chars)}'
+                f'Expected string or Regex object but received {type(ref)}'
             )
         self.ref = str(ref)
 
@@ -317,7 +315,7 @@ class Comment(BaseAdder):
     def __init__(self, comment):
         if not regex_type_checker(comment, self):
             raise TypeError(
-                f'Expected string or Regex object but received {type(chars)}'
+                f'Expected string or Regex object but received {type(comment)}'
             )
         self.comment = str(comment)
 
@@ -356,7 +354,7 @@ class End(BaseAdder):
     def __init__(self, word=''):
         if not regex_type_checker(word, self):
             raise TypeError(
-                f'Expected string or Regex object but received {type(chars)}'
+                f'Expected string or Regex object but received {type(word)}'
             )
         self.word = str(word)
 
@@ -381,7 +379,7 @@ class Escape(BaseAdder):
     def __init__(self, char=''):
         if not regex_type_checker(char, self):
             raise TypeError(
-                f'Expected string or Regex object but received {type(chars)}'
+                f'Expected string or Regex object but received {type(char)}'
             )
         self.char = str(char).lstrip(r'\\')
 
@@ -407,7 +405,7 @@ class Group(BaseAdder):
     def __init__(self, group):
         if not regex_type_checker(group, self):
             raise TypeError(
-                f'Expected string or Regex object but received {type(chars)}'
+                f'Expected string or Regex object but received {type(group)}'
             )
         self.group = str(group)
 
@@ -477,7 +475,8 @@ class LookAheadAssertion(BaseAdder):
     def __init__(self, assertion):
         if not regex_type_checker(assertion, self):
             raise TypeError(
-                f'Expected string or Regex object but received {type(chars)}'
+                ('Expected string or Regex object '
+                f'but received {type(assertion)}')
             )
         self.assertion = str(assertion)
 
@@ -717,9 +716,13 @@ __all__ = (
     ANY,
     ANYTHING,
     ANY_DIGIT,
+    ANY_DIGITS,
     ANY_NON_DIGIT,
+    ANY_NON_DIGITS,
     ANY_NON_WORD,
+    ANY_NON_WORDS,
     ANY_WORD,
+    ANY_WORDS,
     ANY_WORD_GROUPS,
     BACK_REFERENCE,
     COMMENT,
@@ -739,6 +742,7 @@ __all__ = (
     STRING_STARTS_WITH,
     QUESTION_MARK,
     WHITESPACE,
+    WHITESPACES,
     WORD_GROUP,
     WORD_GROUPS,
     ZERO_OR_ONE,
