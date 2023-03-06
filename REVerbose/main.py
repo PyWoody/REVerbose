@@ -47,8 +47,27 @@ class BaseAdder:
         return Regex(self, other)
 
 
+def flagger():
+
+    def flag_getter(instance):
+        return instance.__dict__['flags']
+
+    def flag_setter(instance, value):
+        prev_value = instance.__dict__.get('flags')
+        if prev_value is None or value != prev_value:
+            cls_name = instance.__class__.__name__
+            instance.__dict__[f'_{cls_name}__compiled'] = None
+            instance.__dict__['flags'] = value
+
+    return property(flag_getter, flag_setter)
+
+
 class Regex(BaseAdder):
 
+    flags = flagger()
+
+    # NOTE: Flags could be in the property closure with nonlocal
+    #       instead of a class attr
     def __init__(self, *parts, flags=0):
         self.parts = list(parts)
         self.flags = flags
@@ -94,58 +113,42 @@ class Regex(BaseAdder):
 
     def search(self, string, flags=0):
         """See help(re.search) for help."""
-        if flags != self.flags:
-            self.flags = flags
-            self.__compiled = None
+        self.flags = flags
         return self.compiled.search(string)
 
     def match(self, string, flags=0):
         """See help(re.match) for help."""
-        if flags != self.flags:
-            self.flags = flags
-            self.__compiled = None
+        self.flags = flags
         return self.compiled.match(string)
 
     def fullmatch(self, string, flags=0):
         """See help(re.fullmatch) for help."""
-        if flags != self.flags:
-            self.flags = flags
-            self.__compiled = None
+        self.flags = flags
         return self.compiled.fullmatch(string)
 
     def sub(self, repl, string, count=0, flags=0):
         """See help(re.sub) for help."""
-        if flags != self.flags:
-            self.flags = flags
-            self.__compiled = None
+        self.flags = flags
         return self.compiled.sub(repl, string, count)
 
     def subn(self, repl, string, count=0, flags=0):
         """See help(re.subn) for help."""
-        if flags != self.flags:
-            self.flags = flags
-            self.__compiled = None
+        self.flags = flags
         return self.compiled.subn(repl, string, count)
 
     def split(self, string, maxsplit=0, flags=0):
         """See help(re.split) for help."""
-        if flags != self.flags:
-            self.flags = flags
-            self.__compiled = None
+        self.flags = flags
         return self.compiled.split(string, maxsplit)
 
     def findall(self, string, flags=0):
         """See help(re.findall) for help."""
-        if flags != self.flags:
-            self.flags = flags
-            self.__compiled = None
+        self.flags = flags
         return self.compiled.findall(string)
 
     def finditer(self, string, flags=0):
         """See help(re.finditer) for help."""
-        if flags != self.flags:
-            self.flags = flags
-            self.__compiled = None
+        self.flags = flags
         return self.compiled.finditer(string)
 
 
