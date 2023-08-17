@@ -42,6 +42,7 @@ Compiling a regular expression in steps:
 Since the compiled Regular Expression objects are hashable, they can be used in tuples and as dictionary keys.
 
 ```python3
+>>> import collections
 >>> results = collections.defaultdict(list)
 >>> contains_cats_or_dogs = rev.ONE_OR_MORE(
     rev.NON_MATCHING_GROUPS([rev.LINE_START, rev.WHITESPACE])
@@ -81,6 +82,7 @@ Since the compiled Regular Expression objects are hashable, they can be used in 
 You could easily take advantage of this for use in Counters:
 
 ```python3
+>>> import collections
 >>> counter = collections.Counter()
 >>> words = rev.ZERO_OR_ONE(rev.WHITESPACE)
 >>> words += rev.ALL_OR_NONE(rev.ANY_WORD)
